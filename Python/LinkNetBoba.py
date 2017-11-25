@@ -1,6 +1,16 @@
 #
-# model LinkNet
 #
+# model LinkNet realization for Keras (TensorFlow?)
+#
+# from: https://arxiv.org/pdf/1707.03718.pdf
+# 
+#   Abhishek Chaurasia, Eugenio Culurciello
+#   LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation
+#
+#
+# keys: LinkNet, Keras, Boba
+#
+# 2017-11-25
 #
 
 from keras.models import Input, Model
