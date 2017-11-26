@@ -3,6 +3,7 @@
 from __future__ import print_function
 import datetime
 import numpy as np
+import scipy.ndimage as ndi
 from   scipy.ndimage import label
 
 class TruePredIntersect :
@@ -129,11 +130,17 @@ class TruePredIntersect :
     # Возвращает массив с количеством точек в объектах, 
     # объекты нумеруются в матрице. Ноль - пустое место
     #
+    # 2017-11-27 Реализация перестроена на ndimage.sum. Ускорение существенно.
     #
     
-    def sizing (self,oo) :
+    def sizing_old (self,oo) :
         rr = np.zeros(int(oo.max()+1));
         for rc in oo.ravel() : rr[int(rc)] +=1;
+        return(rr)
+
+    def sizing (self,oo) :
+        oo01 = oo.copy(); oo01[oo>0]=1; 
+        rr = np.array(ndi.sum(oo01,oo,index=range(oo.max()+1)),dtype=np.int16)
         return(rr)
 
     #
@@ -222,10 +229,13 @@ class TruePredIntersect :
     #       в формате массива row,columns. 
     #
     # 2017-11-27 Реализация перестроена на ndimage.label. Ускорение существенно.
+    # 2017-11-27 Добавлен параметр sizeOK для одновременной выдачи размеров
     #
     #
+    #
+    #######
     
-    def intersect (self, true, pred, onlyNotZeros=True) :
+    def intersect (self, true, pred, onlyNotZeros=True, sizeOK=False) :
 
         #print(datetime.datetime.now(),'0')
         (trueL,trueS), (predL, predS) = label(true), label(pred) # матрицы с нумерацией объектов 0..
@@ -234,7 +244,7 @@ class TruePredIntersect :
         # массивы для пересечения и объединения для пар объектов по номерам в списках trueO, predO 
         inter, union = np.zeros((trueS+1,predS+1), dtype=np.int32),np.zeros((trueS+1,predS+1), dtype=np.int32)
         
-        trueS, predS = np.zeros(trueS+1), np.zeros(predS+1)
+        trueS, predS = self.sizing(trueL), self.sizing(predL)
 
         # Считаем размер пересечения
         for rr in range(trueL.shape[0]) :
@@ -252,5 +262,32 @@ class TruePredIntersect :
                     if (tt>0) and (pp>0) : union[tt,pp]=trueS[tt]+predS[pp]-inter[tt,pp]
                 else : union[tt,pp]=trueS[tt]+predS[pp]-inter[tt,pp]
         
+        if sizeOK : return (trueL, predL, inter, union, trueS, predS) 
         
         return (trueL, predL, inter, union)
+    
+    #
+    # Функция для построения массивов первых ненулевых индексов для строк 
+    #
+    # На входе:  матрица пересечений объектов [0..?]x[0..??] 
+    # На выходе: на выходе массив строк с номерами первых ненулевых столбцов (0 - для пустых) 
+    #
+    #
+    #
+    
+    def firstCols (self, intersect) :
+
+        #print(datetime.datetime.now(),'0')
+        #print(datetime.datetime.now(),'1')
+        
+        iCols = np.zeros(intersect.shape[0], dtype=np.int32)
+        #print(iCols.shape)
+        for r in range(intersect.shape[0]) :
+            #print(r,iCols[r])
+            if iCols[r] == 0 :
+                for c in range(1,intersect.shape[1]) :
+                    if intersect[r,c]>0 : iCols[r] = c;
+        
+        return(iCols)
+    
+    
