@@ -1,4 +1,4 @@
-#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # model LinkNet realization for Keras (TensorFlow?)
 #
@@ -8,10 +8,19 @@
 #   LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation
 #
 #
+#
+# realizate by Vladimir Sorokin
+#
+# For FREE use
+#
+#
 # keys: LinkNet, Keras, Boba
 #
 # 2017-11-25
 #
+#
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 from keras.models import Input, Model
 from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D, Conv2D, Concatenate, Activation, Dropout,Add
@@ -19,6 +28,10 @@ from keras.layers import Conv2DTranspose
 from keras.layers.normalization import BatchNormalization
 
 def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=True, printOK=False):
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Encoder block
+    #
     
     def blockEncoder(i, depth, maxDepth, mm, nn) :
         
@@ -58,6 +71,10 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
         return (io)
         
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Decoder block
+    #
+    
     def blockDecoder(i, depth, maxDepth, mm, nn) :
         
         io = i
@@ -79,6 +96,10 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
         return (io)
         
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Level block (recursive call build levels) 
+    #
+    
     def blockLevel(i, depth, maxDepth):
 
         #if batch : m = BatchNormalization(name='bath1d'+str(maxDepth-depth))(m)
@@ -105,7 +126,9 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
         
         return de
     
-    # begin function
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Main function block
+    #
     
     maxDepth = 4
     depth    = 0
@@ -123,10 +146,11 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
     if True : # always exists  
         io = BatchNormalization(name='bath0d'+str(maxDepth-depth))(io)
     
-    # initial block
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Initial function block
+    #
     
     #print(io.shape)
-    
 
     io = Conv2D(64, (7, 7), strides=2, padding='same', name='conv1d'+str(maxDepth-depth))(io)
     if batch : io = BatchNormalization(name='bath1d'+str(maxDepth-depth))(io)
@@ -138,9 +162,15 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
     
     # levels block
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Main build levels
+    #
+    
     io = blockLevel(io,depth+1,maxDepth)
     
-    # ending block
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Final function block
+    #
 
     io = Conv2DTranspose(32, (3, 3), padding='same', name='conv2d'+str(maxDepth-depth))(io)
     if batch : io = BatchNormalization(name='bath2d'+str(maxDepth-depth))(io)
@@ -159,6 +189,10 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
         io = Conv2D(64, (3,3), padding='same', name='conv3X'+str(maxDepth-depth))(io)
         if batch : io = BatchNormalization(name='bath3X'+str(maxDepth-depth))(io)
         io = Activation(acti)(io)                
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # The end. Build output
+    #
     
     io = Conv2DTranspose(n_out, (2, 2), strides=2, padding='same', name='conv4d'+str(maxDepth-depth))(io)
     if batch : io = BatchNormalization(name='bath4d'+str(maxDepth-depth))(io)
