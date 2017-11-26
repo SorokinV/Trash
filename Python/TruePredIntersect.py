@@ -1,8 +1,9 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import numpy as np
 import datetime
+import numpy as np
+from   scipy.ndimage import label
 
 class TruePredIntersect :
     
@@ -220,20 +221,20 @@ class TruePredIntersect :
     #     TopLeft для объекта можно узнать через функцию topleft, она выдает массив topleft координат 
     #       в формате массива row,columns. 
     #
-    # PS. У меня на 2048x2048 может считать 20-40 сек для одной пары true, pred.
+    # 2017-11-27 Реализация перестроена на ndimage.label. Ускорение существенно.
     #
     #
     
     def intersect (self, true, pred, onlyNotZeros=True) :
 
         #print(datetime.datetime.now(),'0')
-        trueL, predL = self.labelling(true), self.labelling(pred) # матрицы с нумерацией объектов 0..
+        (trueL,trueS), (predL, predS) = label(true), label(pred) # матрицы с нумерацией объектов 0..
         #print(datetime.datetime.now(),'1')
-        trueS, predS = self.sizing(trueL), self.sizing(predL)     # размеры объктов
-        #print(datetime.datetime.now(),'2')
         
         # массивы для пересечения и объединения для пар объектов по номерам в списках trueO, predO 
-        inter, union = np.zeros((len(trueS),len(predS)), dtype=np.int32),np.zeros((len(trueS),len(predS)), dtype=np.int32)
+        inter, union = np.zeros((trueS+1,predS+1), dtype=np.int32),np.zeros((trueS+1,predS+1), dtype=np.int32)
+        
+        trueS, predS = np.zeros(trueS+1), np.zeros(predS+1)
 
         # Считаем размер пересечения
         for rr in range(trueL.shape[0]) :
