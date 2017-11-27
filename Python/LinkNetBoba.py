@@ -1,3 +1,5 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # model LinkNet realization for Keras (TensorFlow?)
@@ -184,14 +186,14 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
     
     if dropout : io = SpatialDropout2D(rate=dropout, name='dropLd'+str(maxDepth-depth))(io)
         
-    ###io = UpSampling2D((2,2))(io) -- лишнее
+    ###io = UpSampling2D((2,2))(io) -- ?????? do bad output result 
     if 0 : # on future
         io = Conv2D(64, (3,3), padding='same', name='conv3X'+str(maxDepth-depth))(io)
         if batch : io = BatchNormalization(name='bath3X'+str(maxDepth-depth))(io)
         io = Activation(acti)(io)                
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # The end. Build output
+    # The End. Build output
     #
     
     io = Conv2DTranspose(n_out, (2, 2), strides=2, padding='same', name='conv4d'+str(maxDepth-depth))(io)
