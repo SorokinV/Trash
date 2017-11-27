@@ -114,8 +114,13 @@ class TruePredIntersect :
     # Подразумевается, что входной массив имеет размерность (rows,cols)
     #
     #
+    # 2017-11-27 Переписано на scipy.ndimage.label - существенно быстрее
+    #
+    #
+    #
+    ######
 
-    def labelling (self, oo, minPoints=False, maxPoints=False) :
+    def labelling_old (self, oo, minPoints=False, maxPoints=False) :
 
         temp = np.zeros ((oo.shape[0]+2, oo.shape[1]+2), dtype=oo.dtype)
         temp[1:1+oo.shape[0],1:1+oo.shape[1]] = oo
@@ -123,6 +128,22 @@ class TruePredIntersect :
         temp = self.labelling0(temp, minPoints=minPoints, maxPoints=maxPoints);
 
         return temp[1:1+oo.shape[0],1:1+oo.shape[1]]
+
+    def labelling (self, oo, minPoints=False, maxPoints=False) :
+        
+        temp, count = label(oo)
+        
+        if minPoints or maxPoints :
+            tempS = self.sizing(temp)
+            mminmax = []
+            for ii,tt in enumerate(tempS[1:]) :
+                if minPoints>0 and tt<minPoints : mminmax.append(ii)
+                if maxPoints>0 and tt>maxPoints : mminmax.append(ii)
+            if len(mminmax)>0 :
+                temp[np.isin(temp,mminmax)] = 0
+                temp, count = label(temp)
+
+        return temp
 
     #
     # Функция для расчета размера объектов в размеченной матрице (0 - пустота)
@@ -139,8 +160,9 @@ class TruePredIntersect :
         return(rr)
 
     def sizing (self,oo) :
-        oo01 = oo.copy(); oo01[oo>0]=1; 
-        rr = np.array(ndi.sum(oo01,oo,index=range(oo.max()+1)),dtype=np.int16)
+        oo01  = oo.copy(); oo01[oo>0]=1; 
+        rr    = np.array(ndi.sum(oo01,oo,index=range(int(oo.max())+1)),dtype=np.int32)
+        rr[0] = oo.shape[0]*oo.shape[1]-rr.sum()
         return(rr)
 
     #
