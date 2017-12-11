@@ -20,7 +20,8 @@
 #
 # 2017-11-25
 #
-#
+# 2017-12-11 1. The add operator in blockEncoder move after batch operator and after activation operator
+#            2. Add batch operator 2th conv2 in blockEncoder   
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -49,14 +50,13 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
         
         io = Conv2D(nn, (3, 3), padding='same', name='conv2d'+str(maxDepth-depth))(io)
         if batch : io = BatchNormalization(name='bath2d'+str(maxDepth-depth))(io)
-        io = Activation(acti)(io)                
         
         ii = Conv2D(nn, (1, 1), strides=2, name='ii1d'+str(maxDepth-depth))(i)
-        
-        #print('e 2 depth=',depth,mm,nn,ii.shape,io.shape)
+        if batch : io = BatchNormalization(name='bath2d'+str(maxDepth-depth))(io) # 2017-12-11 add batch
         
         io = Add()([io, ii]); io1 = io;
-        #io = Concatenate()([io, i]); io1 = io;
+        
+        io = Activation(acti)(io)   # 2017-12-11 change point add before activation after batch
         
         io = Conv2D(nn, (3, 3), padding='same', name='conv3d'+str(maxDepth-depth))(io)
         if batch : io = BatchNormalization(name='bath3d'+str(maxDepth-depth))(io)
@@ -64,9 +64,10 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
         
         io = Conv2D(nn, (3, 3), padding='same', name='conv4d'+str(maxDepth-depth))(io)
         if batch : io = BatchNormalization(name='bath4d'+str(maxDepth-depth))(io)
-        io = Activation(acti)(io)                
         
-        io = Add()([io, io1]);
+        io = Add()([io, io1]);     # 2017-12-11 change point add before activation after batch
+        
+        io = Activation(acti)(io)                
         
         ##io = Concatenate()([io, io1]);
         
