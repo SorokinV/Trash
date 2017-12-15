@@ -26,6 +26,7 @@
 # 2017-12-15 1. Fix bugs with names layers
 #            2. Change last layers
 #            3. Add activation parameter for last layer
+#            4. Add conv2D before last layer
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -197,9 +198,13 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
     # The End. Build output
     #
     
-    io = Conv2DTranspose(1, (2, 2), strides=2, padding='same', name='conv4d'+str(maxDepth-depth))(io)
+    io = Conv2DTranspose(n_out, (2, 2), strides=2, padding='same', name='conv4d'+str(maxDepth-depth))(io)
     if batch : io = BatchNormalization(name='bath4d'+str(maxDepth-depth))(io)
     io = Activation(acti)(io)                
+
+    io = Conv2D(n_out, (3,3), padding='same', name='conv5d'+str(maxDepth-depth))(io)
+    if batch : io = BatchNormalization(name='bath5d'+str(maxDepth-depth))(io)
+    io = Activation(acti_last)(io)
 
     io = Conv2D(n_out, (1,1), padding='same', name='convLd'+str(maxDepth-depth))(io)
     o = Activation(acti_last)(io)
