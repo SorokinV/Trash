@@ -52,18 +52,18 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
         if batch : io = BatchNormalization(name='bath2d'+str(maxDepth-depth))(io)
         
         ii = Conv2D(nn, (1, 1), strides=2, name='ii1d'+str(maxDepth-depth))(i)
-        if batch : io = BatchNormalization(name='bath2d'+str(maxDepth-depth))(io) # 2017-12-11 add batch
+        if batch : io = BatchNormalization(name='bath3d'+str(maxDepth-depth))(io) # 2017-12-11 add batch
         
         io = Add()([io, ii]); io1 = io;
         
         io = Activation(acti)(io)   # 2017-12-11 change point add before activation after batch
         
         io = Conv2D(nn, (3, 3), padding='same', name='conv3d'+str(maxDepth-depth))(io)
-        if batch : io = BatchNormalization(name='bath3d'+str(maxDepth-depth))(io)
+        if batch : io = BatchNormalization(name='bath4d'+str(maxDepth-depth))(io)
         io = Activation(acti)(io)                
         
         io = Conv2D(nn, (3, 3), padding='same', name='conv4d'+str(maxDepth-depth))(io)
-        if batch : io = BatchNormalization(name='bath4d'+str(maxDepth-depth))(io)
+        if batch : io = BatchNormalization(name='bath5d'+str(maxDepth-depth))(io)
         
         io = Add()([io, io1]);     # 2017-12-11 change point add before activation after batch
         
