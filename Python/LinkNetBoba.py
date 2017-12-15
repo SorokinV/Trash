@@ -27,7 +27,7 @@
 
 from keras.models import Input, Model
 from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D, Conv2D, Concatenate, Activation, Dropout,Add
-from keras.layers import Conv2DTranspose
+from keras.layers import Conv2DTranspose, SpatialDropout2D
 from keras.layers.normalization import BatchNormalization
 
 def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=True, printOK=False):
