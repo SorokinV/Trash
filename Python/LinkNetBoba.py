@@ -23,6 +23,10 @@
 # 2017-12-11 1. The add operator in blockEncoder move after batch operator and after activation operator
 #            2. Add batch operator 2th conv2 in blockEncoder   
 #
+# 2017-12-15 1. Fix bugs with names layers
+#            2. Change last layers
+#            3. Add activation parameter for last layer
+#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 from keras.models import Input, Model
@@ -30,7 +34,7 @@ from keras.layers import Convolution2D, MaxPooling2D, UpSampling2D, Conv2D, Conc
 from keras.layers import Conv2DTranspose, SpatialDropout2D
 from keras.layers.normalization import BatchNormalization
 
-def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=True, printOK=False):
+def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=True, acti_last='sigmoid', printOK=False):
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Encoder block
@@ -188,18 +192,17 @@ def LinkNetBoba (img_shape, n_out=1, depth=4, acti='elu', dropout=False, batch=T
     if dropout : io = SpatialDropout2D(rate=dropout, name='dropLd'+str(maxDepth-depth))(io)
         
     ###io = UpSampling2D((2,2))(io) -- ?????? do bad output result 
-    if 0 : # on future
-        io = Conv2D(64, (3,3), padding='same', name='conv3X'+str(maxDepth-depth))(io)
-        if batch : io = BatchNormalization(name='bath3X'+str(maxDepth-depth))(io)
-        io = Activation(acti)(io)                
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # The End. Build output
     #
     
-    io = Conv2DTranspose(n_out, (2, 2), strides=2, padding='same', name='conv4d'+str(maxDepth-depth))(io)
+    io = Conv2DTranspose(1, (2, 2), strides=2, padding='same', name='conv4d'+str(maxDepth-depth))(io)
     if batch : io = BatchNormalization(name='bath4d'+str(maxDepth-depth))(io)
-    o = Activation('sigmoid')(io)
+    io = Activation(acti)(io)                
+
+    io = Conv2D(n_out, (1,1), padding='same', name='convLd'+str(maxDepth-depth))(io)
+    o = Activation(acti_last)(io)
 
     return Model(inputs=i, outputs=o, name='LinkNetBoba')
 
